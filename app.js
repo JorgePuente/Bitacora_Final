@@ -4,13 +4,17 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 var mongoose = require('mongoose');
-
+var MongoStore = require('connect-mongo')(session);
+ 
 mongoose.connect('mongodb://localhost/tareas');
 
 require('./models/Tareas'); //Agregar modelo, o esquema de la base de datos
+require('./models/Usuarios'); // Agregar por cada modelo que tengamos creado
 
-var routes = require('./routes/index');
+var routes = require('./routes/tareas');
+var login = require('./routes/login');
 var users = require('./routes/users');
 
 var app = express();
@@ -25,9 +29,16 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({
+    resave: true,
+    saveUninitialized: true,
+    secret: 'eoncore',
+  })
+);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
+app.use('/login', login);
 app.use('/users', users);
 
 // catch 404 and forward to error handler

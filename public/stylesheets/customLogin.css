@@ -1,0 +1,45 @@
+body#login {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+#login .header-panel {
+	height: 200px;
+	background-color: white;
+}
+
+#login .header-panel img{
+	width: 150px;
+	display: block;
+	margin: 0 auto;
+}
+
+#login .header-panel .pages{
+	position: absolute;
+	top: 110px;
+	margin-left: auto;
+	margin-right: auto;
+	left: 15%;
+	right: 15%;
+	z-index: 4;
+	padding: 0px;
+}
+
+#login .header-panel .pages > div {
+    padding: 64px 5px 0px;
+}
+
+#login .header-panel .pages .page.active {
+    transform: translateY(0px);
+    transition: all 0.3s ease-out 0s;
+    display: block;
+    opacity: 1; 
+    padding: 64px 5px 0px;
+	margin: 0 auto;
+    width: 440px;
+    padding-bottom: 15px;
+}
+
+#login .header-panel .pages .form-group input {
+    width: 100%;
+}

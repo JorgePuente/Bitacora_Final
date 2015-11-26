@@ -1,0 +1,37 @@
+<div class="pages col-xs-12">
+	<!-- {{usuarios}} -->
+	<div class="row">
+		<div class="col-xs-10 col-xs-offset-1">
+			<div style="display: block;" class="well page active" id="floating-action-button">
+            
+				<form name="form_login" class="form-horizontal">
+				  <fieldset>
+				    <legend>Inicia Sesión</legend>
+				    <div class="form-group">
+				      <label for="inputEmail" class="col-lg-2 control-label">Email</label>
+
+				      <div class="col-lg-10">
+				        <input class="form-control" id="inputEmail" placeholder="Email" type="email" ng-model="usuario.correo_electronico">
+				      </div>
+				    </div>
+				    <div class="form-group">
+				      <label for="inputPassword" class="col-lg-2 control-label">Password</label>
+
+				      <div class="col-lg-10">
+				        <input class="form-control" ng-model="usuario.password" id="inputPassword" placeholder="Password" type="password">
+				      </div>
+				    </div>
+				    <div class="form-group">
+				         <div class="col-lg-10 col-lg-offset-2">
+				           <button type="button" class="btn btn-default">Cancelar</button>
+				           <button type="submit" class="btn btn-primary" ng-click="iniciar_sesion()">Entrar</button>
+				         </div>
+				    </div>
+				    
+				  </fieldset>
+				</form>
+            
+          	</div>
+		</div>
+	</div>
+</div>
