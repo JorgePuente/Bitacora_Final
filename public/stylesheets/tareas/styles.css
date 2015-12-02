@@ -1,66 +1,93 @@
+[ng-click]:hover {
+  cursor: pointer;
+}
 
 md-content.md-default-theme {
   background-color: #eee;
 }
-md-card {
-  background-color: #fff;
+
+md-sidenav > md-toolbar {
+  padding: 15px;
+  height: 150px;
+  max-height: 150px;
 }
 
-md-card h2:first-of-type {
-  margin-top: 0;
+md-sidenav md-list-item.md-2-line .md-list-item-text {
+  padding-top: 14px;
+  padding-bottom: 12px;
 }
 
-md-toolbar .md-button.md-default-theme {
-    border-radius: 99%; // round toolbar buttons
+md-sidenav md-divider {
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
-h2 {
-  font-weight: 400;
-}
-.md-toolbar-tools-bottom {
-  font-size: small;
+md-sidenav md-icon {
+  fill: #737373;
+  position: relative;
 }
 
-.md-toolbar-tools-bottom:last-child{ 
-  opacity: 0.8;
+md-sidenav .md-avatar {
+  height: 64px;
+  width: 64px;
 }
 
-md-toolbar:not(.md-hue-1),
-.md-fab {
+/* More closely matches https://www.google.com/design/spec/components/lists.html#lists-specs */
+md-list-item.md-3-line md-divider[md-inset] {
+  left: 70px;
+}
+
+.md-avatar > svg {
+  border-radius: 50%;
+}
+
+/* fade animation */
+.animate-show {
+  transition: 0.75s ease-out opacity;
+  opacity: 1;
+}
+
+.animate-show.ng-hide {
+  height: 0;
+  min-height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+
+
+
+ng-md-icon {
   fill: #fff;
 }
-md-sidenav {
-  fill: #737373;
+
+ng-md-icon .arr_back {
+  fill: #fff;
 }
 
-md-sidenav ng-md-icon {
-  position: relative;
-  top: 5px; // adjust for svg viewbox
-}
-.user-avatar {
-  border-radius: 99%;
+.menu_prin ng-md-icon{
+  fill: #78999C !important;
 }
 
-md-dialog {
-	width: 650px;
+.menu_prin {
+  color: #78999C !important;
 }
 
 ng-md-icon.calendar_proj {
   fill: #78999C;
 }
 
-
 .icon_conf ng-md-icon:hover {
   cursor: pointer;
 }
 
 .date_proj {
-  color: #737373;
+  color: #737373 !important;
 }
 
-.md-tile-content h3 {
-  font-weight: bold;
-  color: #0277BD;
+.md-list-item-text h3 {
+  font-weight: bold !important;
+  color: #0277BD !important;
 }
 
 md-list .side_menu:hover{
@@ -76,14 +103,22 @@ md-list a:visited{
   color:inherit;
 }
 
-.md-tile-content .type_icon {
+.md-list-item-text .type_icon {
   fill: #69C9F5;
 }
 
-.md-tile-content .type_text {
-  color:#737373;
-  font-size: 12px;
+.md-list-item-text .type_text {
+  color:#737373 !important;
   font-style: italic;
+  display: inline-block;
+  position: absolute;
+  bottom: 2px;
+}
+
+.md-list-item-text h4 {
+  margin-top: 0px !important;
+  margin-bottom: 15px !important;
+  color: #78999C !important;
 }
 
 .select md-select {
@@ -94,4 +129,39 @@ md-list a:visited{
 
 .select label {
     color:#636363;
+}
+
+project-thumb.principal_thumb {
+  margin-top: 0 !important;
+}
+
+md-dialog {
+  width: 600px;
+}
+
+.md-virtual-repeat-container.md-autocomplete-suggestions-container {
+  width : 350px;
+  height: 250px;
+}
+
+.icon_tipo ng-md-icon {
+  fill: #69C9F5;
+}
+
+.img_status  {
+  position: relative;
+  border-bottom: 1px dotted darkorange;
+  padding: 41px 0;
+}
+
+.img_status img {
+  margin-top: 0 !important;
+}
+
+.img_status  span {
+  position: absolute;
+  top: 34px;
+  padding-left: 25px;
+  font-weight: bold;
+  color: #3FB9F0;
 }
