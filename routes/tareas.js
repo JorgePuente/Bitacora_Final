@@ -1,28 +1,55 @@
 var express = require('express');
 var router = express.Router();
+//var passport = require('passport');
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-	console.log('tarea');
-	var sess = req.session;
-	console.log(sess);
-	if (sess.user){
-  		res.render('tareas/appTarea', { title: 'Registrar tareas' });
+router.get('/',  function(req, res, next) {
+	console.log(req.session.user);
+
+	// console.log('session user', req.session.user);
+	if (req.session.user){
+  		res.render('tareas/appTarea', { user: req.session.user });
 	}else{
-  		res.render('login/appLogin', { title: 'Inicia Sesión' });
+  		res.redirect('/login');
 	}
 });
 
 var mongoose = require('mongoose');
 var Tareas = mongoose.model('Tareas'); // Instancia del modelo tareas que creamos anteriormente
 
-//GET - Metodo para listar tareas
+//GET - Metodo para listar todas las tareas
 router.get('/tareas', function(req, res, next){
 	Tareas.find(function(err, tareas){
 		if(err){return next(err)}
 
 		res.json(tareas)
 	})
+});
+
+//GET - Metodo para listar tareas pendientes
+router.get('/tareas_pend', function(req, res, next){
+	console.log('aqui estoy');
+	Tareas.find()
+		// .where('status').equals('PAUSA')
+		.or([{status : 'PAUSA'}, {status : 'PROCESO'}, {status : 'ESPERA'}])
+		.exec(function(err, tareas){
+			if(err){return next(err)}
+
+			res.json(tareas)
+		});
+});
+
+//GET - Metodo para listar tareas finalizadas
+router.get('/tareas_fin', function(req, res, next){
+	console.log('aqui estoy');
+	Tareas.find()
+		// .where('status').equals('PAUSA')
+		.or([{status : 'TERMINADA'}, {status : 'CANCELADA'}])
+		.exec(function(err, tareas){
+			if(err){return next(err)}
+
+			res.json(tareas)
+		});
 });
 
 //POST - Agregar Tareas

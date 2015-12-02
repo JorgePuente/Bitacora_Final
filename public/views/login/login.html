@@ -4,27 +4,27 @@
 		<div class="col-xs-10 col-xs-offset-1">
 			<div style="display: block;" class="well page active" id="floating-action-button">
             
-				<form name="form_login" class="form-horizontal">
+				<form name="form_login" class="form-horizontal" action="/login/login" method="POST">
 				  <fieldset>
 				    <legend>Inicia Sesión</legend>
 				    <div class="form-group">
-				      <label for="inputEmail" class="col-lg-2 control-label">Email</label>
+				      <label for="inputEmail" class="col-lg-2 control-label">Nombre de Usuario</label>
 
 				      <div class="col-lg-10">
-				        <input class="form-control" id="inputEmail" placeholder="Email" type="email" ng-model="usuario.correo_electronico">
+				        <input class="form-control" id="inputEmail" name="username" placeholder="Nombre de Usuario" type="text" ng-model="usuario.username">
 				      </div>
 				    </div>
 				    <div class="form-group">
 				      <label for="inputPassword" class="col-lg-2 control-label">Password</label>
 
 				      <div class="col-lg-10">
-				        <input class="form-control" ng-model="usuario.password" id="inputPassword" placeholder="Password" type="password">
+				        <input class="form-control" ng-model="usuario.password" name="password" id="inputPassword" placeholder="Password" type="password">
 				      </div>
 				    </div>
 				    <div class="form-group">
 				         <div class="col-lg-10 col-lg-offset-2">
 				           <button type="button" class="btn btn-default">Cancelar</button>
-				           <button type="submit" class="btn btn-primary" ng-click="iniciar_sesion()">Entrar</button>
+				           <button type="submit" class="btn btn-primary" >Entrar</button>
 				         </div>
 				    </div>
 				    

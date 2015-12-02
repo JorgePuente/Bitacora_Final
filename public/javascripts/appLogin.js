@@ -29,8 +29,9 @@ angular.module('appLogin', ['ui.router'])
 
 		comunUsuario.session_start = function(){
 			console.log('session_start');
-			return $http.get('/login/usuario/'+comunUsuario.usuario.id) //http.get parsea el objeto de datos de la base de datos a un arreglo
+			return $http.post('/login/login', passport.authenticate('local'), comunUsuario.usuaio)
 			.success(function(data){
+				console.log('success');
 				angular.copy(data, comunUsuario.usuarios);
 				
 				return comunUsuario.usuarios;
@@ -39,7 +40,7 @@ angular.module('appLogin', ['ui.router'])
 
 		return comunUsuario;
 	}) 
-	.controller('ctrlLogin', function($scope, $state, $location, comunUsuario){
+	.controller('ctrlLogin', function($scope, $state, comunUsuario){
 		$scope.usuario = {};
 		// $scope.tareas = [];
 
@@ -50,36 +51,43 @@ angular.module('appLogin', ['ui.router'])
 		$scope.iniciar_sesion = function(){
 			if ($scope.form_login.$valid) {
 
-				var length = comunUsuario.usuarios.length;
-				var mail = 0;
-				var objUsuarios = comunUsuario.usuarios;
+				console.log($scope.usuario);
 
-				for (var i = 0; i < length; i++) {
+				// var length = comunUsuario.usuarios.length;
+				// var mail = 0;
+				// var objUsuarios = comunUsuario.usuarios;
 
-					// console.log(objUsuarios[i].correo_electronico, '-----', $scope.usuario.correo_electronico);
+				comunUsuario.usuario = $scope.usuario;
+				comunUsuario.session_start();
+
+				// for (var i = 0; i < length; i++) {
+
+				// 	// console.log(objUsuarios[i].correo_electronico, '-----', $scope.usuario.correo_electronico);
 					
-					if (objUsuarios[i].correo_electronico == $scope.usuario.correo_electronico) {
-						mail++;
-						// console.log(objUsuarios[i].password, '-----', $scope.usuario.password);
-						if (objUsuarios[i].password == $scope.usuario.password) {
-							comunUsuario.usuario.id = objUsuarios[i]._id;
-							comunUsuario.session_start();
-							setTimeout(function(){
-								window.location.href = '/'; // cambia de vista y renderea las tareas
-							}, 1000);
-							//console.log('inicie sesion');
-							return;
-						}
-					}
+				// 	if (objUsuarios[i].correo_electronico == $scope.usuario.correo_electronico) {
+				// 		mail++;
+				// 		// console.log(objUsuarios[i].password, '-----', $scope.usuario.password);
+				// 		if (objUsuarios[i].password == $scope.usuario.password) {
+				// 			objUsuarios[i]._id
+				// 			comunUsuario.usuario = objUsuarios[i];
+				// 			comunUsuario.session_start();
+				// 			return;
+				// 			setTimeout(function(){
+				// 				window.location.href = '/'; // cambia de vista y renderea las tareas
+				// 			}, 1000);
+				// 			//console.log('inicie sesion');
+				// 			return;
+				// 		}
+				// 	}
 
 
-				};
+				// };
 
-				if (mail > 0) {
-					console.log('contraseña incorrecta');
-				}else {
-					console.log('usuario incorrecto');
-				}
+				// if (mail > 0) {
+				// 	console.log('contraseña incorrecta');
+				// }else {
+				// 	console.log('usuario incorrecto');
+				// }
 
 			}
 

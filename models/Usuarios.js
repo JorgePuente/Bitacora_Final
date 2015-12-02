@@ -1,10 +1,15 @@
 var mongoose = require('mongoose');
+var passportLocalMongoose = require('passport-local-mongoose');
 
 var UsuariosSchema = new mongoose.Schema({
-	nombre: String,
+	username: String,
 	correo_electronico: String,
 	password : String,
+	tipo_permiso : Number,
+	projects: ['ProyectosSchema'],
 	created: { type: Date, default: Date.now }
 }); //tendra la esctructura de la tabla
 
-mongoose.model('Usuarios', UsuariosSchema);
+UsuariosSchema.plugin(passportLocalMongoose);
+
+module.exports = mongoose.model('Usuarios', UsuariosSchema);;

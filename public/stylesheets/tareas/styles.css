@@ -1,0 +1,97 @@
+
+md-content.md-default-theme {
+  background-color: #eee;
+}
+md-card {
+  background-color: #fff;
+}
+
+md-card h2:first-of-type {
+  margin-top: 0;
+}
+
+md-toolbar .md-button.md-default-theme {
+    border-radius: 99%; // round toolbar buttons
+}
+
+h2 {
+  font-weight: 400;
+}
+.md-toolbar-tools-bottom {
+  font-size: small;
+}
+
+.md-toolbar-tools-bottom:last-child{ 
+  opacity: 0.8;
+}
+
+md-toolbar:not(.md-hue-1),
+.md-fab {
+  fill: #fff;
+}
+md-sidenav {
+  fill: #737373;
+}
+
+md-sidenav ng-md-icon {
+  position: relative;
+  top: 5px; // adjust for svg viewbox
+}
+.user-avatar {
+  border-radius: 99%;
+}
+
+md-dialog {
+	width: 650px;
+}
+
+ng-md-icon.calendar_proj {
+  fill: #78999C;
+}
+
+
+.icon_conf ng-md-icon:hover {
+  cursor: pointer;
+}
+
+.date_proj {
+  color: #737373;
+}
+
+.md-tile-content h3 {
+  font-weight: bold;
+  color: #0277BD;
+}
+
+md-list .side_menu:hover{
+  cursor: pointer;
+}
+
+md-list a{
+  text-decoration: none;
+  text-transform: none;
+}
+
+md-list a:visited{
+  color:inherit;
+}
+
+.md-tile-content .type_icon {
+  fill: #69C9F5;
+}
+
+.md-tile-content .type_text {
+  color:#737373;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.select md-select {
+    display: inline-block;
+    margin-top: 2px;
+    width: 100%;
+}
+
+.select label {
+    color:#636363;
+}
