@@ -1,0 +1,99 @@
+<md-dialog aria-label="Form"> 
+	<md-content class="md-padding">
+		<form name="tareasForm">
+
+			<div layout layout-sm="column">
+				<md-input-container flex>
+					<label>Nombre de la tarea</label>
+					<input ng-model="tarea.nombre">
+				</md-input-container>
+			</div>
+
+			<div layout layout-sm="column">
+				<md-input-container flex>
+					<label>Tipo</label>
+					<md-select ng-model="tarea.tipo" flex>
+						<md-option class="icon_tipo" ng-repeat="tipo in tipos" value="{{tipo}}" flex>
+							<ng-md-icon class="type_icon" icon="desktop_mac" ng-show="tipo == 'PLANIFICADA'"></ng-md-icon> 
+							<ng-md-icon class="type_icon" icon="publish" ng-show="tipo == 'MEJORA'"></ng-md-icon>
+							<ng-md-icon class="type_icon" icon="healing" ng-show="tipo == 'CORRECCION'"></ng-md-icon>
+
+							<span> {{tipo}} </span>
+						</md-option>
+					</md-select>
+				</md-input-container>
+			</div>
+
+			<div layout layout-sm="column">
+				<md-input-container flex>
+					<label>Status</label>
+					<md-select ng-model="tarea.status" flex>
+						<md-option class="img_status" ng-repeat="stat in status" value="{{stat}}" flex>
+							<pause-thumb ng-show="stat == 'PAUSA'"></pause-thumb>
+							<proccess-thumb ng-show="stat == 'PROCESO'"></proccess-thumb>
+							<wait-thumb ng-show="stat == 'ESPERA'"></wait-thumb>
+							<finished-thumb ng-show="stat == 'TERMINADA'"></finished-thumb>
+							<cancel-thumb ng-show="stat == 'CANCELADA'"></cancel-thumb>
+
+							<span> {{stat}} </span>
+						</md-option>
+					</md-select>
+				</md-input-container>
+			</div>
+
+			<div layout layout-sm="column">
+				<md-input-container flex>
+					<md-datepicker ng-model="tarea.fecha_plan" md-placeholder="Plan término" aria-label="Fecha plan" md-min-date="today"></md-datepicker>
+				</md-input-container>
+
+				<md-input-container flex>
+					<md-datepicker ng-model="tarea.fecha_termino" md-placeholder="Fecha término" aria-label="Fecha plan" md-min-date="tarea.fecha_plan"></md-datepicker>
+				</md-input-container>
+			</div>
+
+			<div layout layout-sm="column">
+				<div-input-container flex>
+					<label>Usuarios Asignados</label>
+					<md-chips ng-model="selectedUsers" md-autocomplete-snap md-transform-chip="transformChip($chip)" md-require-match="autocompleteDemoRequireMatch">	<md-autocomplete 
+							md-selected-item="selectedItem"
+							md-search-text="searchText"
+							md-items="item in querySearch(searchText)"
+							md-item-text="item.name"
+							placeholder="Nombre/correo"> 
+
+								<span md-highlight-text="searchText">{{item.name}} :: {{item.mail}}</span>
+						</md-autocomplete>
+						<md-chip-template> 
+							<span> <strong>{{$chip.name}}</strong> <em>({{$chip.mail}})</em> </span>
+						</md-chip-template>
+					</md-chips>
+				</md-input-container>
+			</div>
+
+			<div layout layout-sm="column">
+				<md-input-container flex>
+					<label>Proyecto</label>
+					<md-select ng-model="proyectoSelected" flex>
+						<md-option class="icon_tipo" ng-repeat="proyecto in proyectos" value="{{proyecto._id}}" flex>
+							<span> {{proyecto.titulo}} </span>
+						</md-option>
+					</md-select>
+				</md-input-container>
+			</div>
+
+			<md-input-container flex> 
+				<label>Descripcion</label>
+				<textarea ng-model="tarea.descripcion" columns="1" md-maxlength="150"></textarea>
+			</md-input-container>
+
+		</form>
+
+	</md-content>
+
+	<div class="md-actions" layout="row">
+		<span flex></span>
+		<md-button ng-click="hide()"> Cancel </md-button>
+		<md-button ng-click="answer('useful')" class="md-primary"> Save </md-button> 
+	</div>
+
+</md-dialog>

@@ -6,7 +6,6 @@ var UsuariosSchema = new mongoose.Schema({
 	correo_electronico: String,
 	password : String,
 	tipo_permiso : Number,
-	projects: ['ProyectosSchema'],
 	created: { type: Date, default: Date.now }
 }); //tendra la esctructura de la tabla
 

@@ -1,0 +1,23 @@
+<md-dialog aria-label="Mango (Fruit)"> 
+	<md-content class="md-padding"> 
+		<form name="projectForm"> 
+			<div layout layout-lg="column">  
+				<md-input-container flex> 
+					<label>Nombre del proyecto</label> 
+					<input ng-model="proyecto.titulo" ng-required="true"> 
+				</md-input-container> 
+			</div>
+
+			<md-input-container flex>
+				<label>Descripcion</label> 
+				<textarea ng-model="proyecto.descripcion" columns="1" md-maxlength="150"></textarea> 
+			</md-input-container> 
+		</form> 
+	</md-content> 
+
+	<div class="md-actions" layout="row"> 
+		<span flex></span> 
+		<md-button ng-click="cancel()"> Cancelar </md-button> 
+		<md-button ng-click="answer('proyecto')" class="md-primary"> Guardar </md-button> 
+	</div>
+</md-dialog>

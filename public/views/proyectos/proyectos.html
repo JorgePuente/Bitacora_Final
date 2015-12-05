@@ -74,7 +74,7 @@
                           <div class="icon_conf">
                             <ng-md-icon icon="edit" style="fill:#EA9D00;" ng-click="editProject(item, $event)"><md-tooltip md-autohide="true">Editar Proyecto</md-tooltip></ng-md-icon>
                             <ng-md-icon icon="assignment" style="fill:#D85431;" ng-click="projectAssignments(item)"><md-tooltip md-autohide="true">Ver Tareas Asignadas</md-tooltip></ng-md-icon>
-                            <ng-md-icon icon="delete" style="fill:#FF2D00;" ng-click="deleteProject(item)"><md-tooltip md-autohide="true">Eliminar Proyecto</md-tooltip></ng-md-icon>
+                            <ng-md-icon icon="delete" style="fill:#FF2D00;" ng-click="showConfirmProyecto($event, item)"><md-tooltip md-autohide="true">Eliminar Proyecto</md-tooltip></ng-md-icon>
                           </div>
                         </div>
                         <md-divider md-inset hide-sm ng-if="!$last"></md-divider>

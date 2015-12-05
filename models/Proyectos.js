@@ -3,9 +3,9 @@ var mongoose = require('mongoose');
 var ProyectosSchema = new mongoose.Schema({
 	titulo: String,
 	descripcion : String,
-	users: ['UsuariosSchema'],
+	// tareas: [{type: mongoose.Schema.Types.ObjectId, ref: 'TareasSchema'}],
 	created : { type: Date, default: Date.now },
 	createdby : String,
 }); //tendra la esctructura de la tabla
 
-mongoose.model('Proyectos', ProyectosSchema);
+module.exports = mongoose.model('Proyectos', ProyectosSchema);

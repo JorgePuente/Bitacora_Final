@@ -25,6 +25,21 @@ router.post('/proyecto', function(req, res, next){
 	})
 });
 
+
+// buscar proyecto por id
+router.get('/proyecto/:id', function(req, res, next){
+	Proyectos.findById(req.params.id, function(err, proyecto){//is es el parametro que enviamos a traves de la ruta //tarea es el elemento de la base de datos que ya encontro
+		// console.log('proyecto');
+		// console.log(proyecto);
+		if (err) {return next(err)}else{
+
+			res.json(proyecto);
+			//window.location.href = '/'; 
+		}
+
+	});
+});
+
 //PUT - Actualizar Proyectos
 router.put('/proyecto/:id', function(req, res){
 	Proyectos.findById(req.params.id, function(err, proyecto){//is es el parametro que enviamos a traves de la ruta //proyecto es el elemento de la base de datos que ya encontro

@@ -165,3 +165,11 @@ md-dialog {
   font-weight: bold;
   color: #3FB9F0;
 }
+
+md-autocomplete input:not(.md-input) {
+  background-color: #eee !important;
+}
+
+.md-select-menu-container.md-active md-select-menu > * {
+  background-color: white !important;
+}

@@ -8,7 +8,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			})
 			.state('proyectos', {// le indicamos el estado con el que trabajara state provider
 				url: '/proyectos',
-				templateUrl: 'views/tareas/proyectos.html',
+				templateUrl: 'views/proyectos/proyectos.html',
 				controller: 'ctrlProyectos'
 			})
 
@@ -42,8 +42,12 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		comun.usuario = {};
 		comun.tipos = ['PLANIFICADA', 'MEJORA', 'CORRECCION'];
 		comun.status = ['PAUSA', 'PROCESO', 'ESPERA', 'TERMINADA', 'CANCELADA'];
+		comun.usuariosAsignados = [];
 
-		comun.proyecto_id = 0;
+		comun.projects = 0;
+
+		// objeto que contendrá la información para la ventana de dialogo de confirmacion de eliminacion de elemento
+		comun.confirm = {};
 
 		//******************** Seccion de metodos para tareas*************
 		comun.getAll = function(){
@@ -77,15 +81,25 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			return $http.post('/tarea', tarea)
 			.success(function(tarea){
 				comun.tareas.push(tarea);
+
+				if (tarea.status == 'ESPERA' || tarea.status == 'PROCESO' || tarea.status == 'PAUSA') {
+					comun.tareas_pend.push(tarea);
+				}else if (tarea.status == 'TERMINADA' || tarea.status == 'CANCELADA') {
+					comun.tareas_fin.push(tarea);
+				}
 			})
 		}
 
 		comun.update = function(tarea){
+			console.log('tarea', tarea)
 			return $http.put('/tarea/' + tarea._id, tarea)
 			.success(function(data){
+				console.log('data',data);
 				var indice = comun.tareas.indexOf(tarea);
+				comun.tareas[indice] = data;
 
-				comun.tareas[indice] = data
+				comun.getAllFin();
+				comun.getAllPend();
 			})
 		}
 
@@ -94,6 +108,9 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			.success(function(){
 				var indice = comun.tareas.indexOf(tarea);
 				comun.tareas.splice(indice, 1); // Se elimina 1 tarea
+
+				comun.getAllFin();
+				comun.getAllPend();
 			})
 		}
 
@@ -137,22 +154,50 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			return $http.get('/login/usuarios') //http.get parsea el objeto de datos de la base de datos a un arreglo
 			.success(function(data){
 				angular.copy(data, comun.usuarios);
+				// console.log('Aqui me trabo');
 				// console.log('comun usuarios', comun.usuarios);
 				
 				//********************* llenar objeto para chips de usuarios
+				comun.users = comun.transformUsuarios(comun.usuarios)
+				//********************* termino de llenar objeto para chips de usuarios
+
+				return comun.usuarios;
+			})
+		}
+
+		comun.selectedUsers = [];
+
+		comun.selectedUsersFill = function(){
+			// console.log('Aqui me trabo selectedUsersFill', comun.tarea);
+			comun.selectedUsers = comun.transformUsuarios(comun.tarea.users);
+		}
+
+
+		comun.transformUsuarios = function(usuarios) {
+			//********************* llenar objeto para chips de usuarios
 				var users = [];
-				for (var i = 0; i < comun.usuarios.length; i++) {
-			  		users.push({'name': comun.usuarios[i].username, 'mail': comun.usuarios[i].correo_electronico});
+				// console.log('transformUsuarios');
+				for (var i = 0; i < usuarios.length; i++) {
+			  		users.push({'name': usuarios[i].username, 'mail': usuarios[i].correo_electronico, 'id' : usuarios[i]._id});
 			  	};
 
-			  	comun.users = users.map(function (user) {
+			  	return users.map(function (user) {
 				  		// console.log(user);
 					    user._lowername = user.name.toLowerCase();
 					    user._lowertype = user.mail.toLowerCase();
 					    return user;
 					});
+		}
 
-				//******************** termino de llenar objeto para chips de usuarios
+		comun.findProjectAssignments = function(item){
+			return $http.get('/tarea/proyect') //http.get parsea el objeto de datos de la base de datos a un arreglo
+			.success(function(data){
+				angular.copy(data, comun.usuarios);
+				// console.log('comun usuarios', comun.usuarios);
+				
+				//********************* llenar objeto para chips de usuarios
+				comun.users = comun.transformUsuarios(comun.usuarios)
+				//********************* termino de llenar objeto para chips de usuarios
 
 				return comun.usuarios;
 			})
@@ -170,13 +215,15 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		$scope.showAddProject = function(ev) {
 		    $mdDialog.show({
 		      controller: 'proyectoModal',
-		      template: '<md-dialog aria-label="Mango (Fruit)"> <md-content class="md-padding"> <form name="projectForm"> <div layout layout-lg="column">  <md-input-container flex> <label>Nombre del proyecto</label> <input ng-model="proyecto.titulo" ng-required="true"> </md-input-container> </div> <md-input-container flex> <label>Descripcion</label> <textarea ng-model="proyecto.descripcion" columns="1" md-maxlength="150"></textarea> </md-input-container> </form> </md-content> <div class="md-actions" layout="row"> <span flex></span> <md-button ng-click="cancel()"> Cancelar </md-button> <md-button ng-click="answer(\'proyecto\')" class="md-primary"> Guardar </md-button> </div></md-dialog>',
+		      templateUrl: 'views/proyectos/formulario.html',
 		      targetEvent: ev
 		    })
 		    .then(function(tipo, answer) {
 		    	comun.proyecto = {};
+		    	$scope.proyecto = {};
 		    }, function() {
 		    	comun.proyecto = {};
+		    	$scope.proyecto = {};
 		    	console.log('not then');
 		      $scope.alert = 'You cancelled the dialog.';
 		    });
@@ -188,9 +235,30 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			// comun.updateProject(project);
 		}
 
-		$scope.deleteProject = function(project){
-			comun.deleteProject(project);
+		$scope.projectAssignments = function(item){
+			// console.log(item._id);
+			comun.findProjectAssignments(item);
 		}
+
+		$scope.showConfirmProyecto = function(ev, item) {
+		    comun.confirm = {
+		    	model : 'Proyecto',
+		    	delete : false,
+		    	item : item,
+		    	msg : '¿Realmente desea eliminar el proyecto "'+ item.titulo +'"'
+		    };
+		    $mdDialog.show({
+		      controller: 'ctrlConfirm',
+		      templateUrl: 'views/general/confirm.html',
+		      targetEvent: ev
+		    })
+		    .then(function(tipo, answer) {
+		    	comun.confirm = {};
+		    }, function() {
+		    	comun.confirm = {};
+		    	console.log('not then');
+		    });
+		};
 	})
 	.controller('ctrlTareas', function($scope, $state, comun, $mdBottomSheet, $mdSidenav, $mdDialog){
 		
@@ -209,21 +277,32 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		$scope.prioridades = ['Baja', 'Normal', 'Alta'];
 		$scope.tipos = comun.tipos;
 
-
 		$scope.showAddTarea = function(ev) {
+			console.log(comun.tarea._id);
+			if (typeof comun.tarea._id != 'undefined') {
+				comun.selectedUsersFill();
+			}
+
 		    $mdDialog.show({
 		      controller: 'tareaModal',
-		      template: '<md-dialog aria-label="Form"> <md-content class="md-padding"> <form name="tareasForm"> <div layout layout-sm="column"> <md-input-container flex> <label>Nombre de la tarea</label> <input ng-model="tarea.nombre"> </md-input-container> </div> <div layout layout-sm="column"> <md-input-container flex><label>Tipo</label><md-select ng-model="tarea.tipo" flex> <md-option class="icon_tipo" ng-repeat="tipo in tipos" value="{{tipo}}" flex> <ng-md-icon class="type_icon" icon="desktop_mac" ng-show="tipo == \'PLANIFICADA\'"></ng-md-icon> <ng-md-icon class="type_icon" icon="publish" ng-show="tipo == \'MEJORA\'"></ng-md-icon> <ng-md-icon class="type_icon" icon="healing" ng-show="tipo == \'CORRECCION\'"></ng-md-icon> <span> {{tipo}} </span> </img src=""> </md-option> </md-select> </md-input-container> </div> <div layout layout-sm="column"> <md-input-container flex><label>Status</label><md-select ng-model="tarea.status" flex> <md-option class="img_status" ng-repeat="stat in status" value="{{stat}}" flex> <pause-thumb ng-show="stat == \'PAUSA\'"></pause-thumb> <proccess-thumb ng-show="stat == \'PROCESO\'"></proccess-thumb> <wait-thumb ng-show="stat == \'ESPERA\'"></wait-thumb> <finished-thumb ng-show="stat == \'TERMINADA\'"></finished-thumb> <cancel-thumb ng-show="stat == \'CANCELADA\'"></cancel-thumb> <span> {{stat}} </span> </img src=""> </md-option> </md-select> </md-input-container> </div> <div layout layout-sm="column"> <md-input-container flex> <md-datepicker ng-model="tarea.fecha_plan" md-placeholder="Plan término" aria-label="Fecha plan" md-min-date="today"></md-datepicker> </md-input-container> <md-input-container flex> <md-datepicker ng-model="tarea.fecha_termino" md-placeholder="Fecha término" aria-label="Fecha plan" md-min-date="tarea.fecha_plan"></md-datepicker> </md-input-container> </div> <div layout layout-sm="column"> <div-input-container flex> <label>Usuarios Asignados</label> <md-chips ng-model="selectedUsers" md-autocomplete-snap md-transform-chip="transformChip($chip)" md-require-match="autocompleteDemoRequireMatch"> <md-autocomplete md-selected-item="selectedItem" md-search-text="searchText" md-items="item in querySearch(searchText)" md-item-text="item.name" placeholder="Nombre/correo"> <span md-highlight-text="searchText">{{item.name}} :: {{item.mail}}</span> </md-autocomplete> <md-chip-template> <span> <strong>{{$chip.name}}</strong> <em>({{$chip.mail}})</em> </span> </md-chip-template> </md-chips> </md-input-container> </div> <md-input-container flex> <label>Descripcion</label> <textarea ng-model="tarea.descripcion" columns="1" md-maxlength="150"></textarea> </md-input-container> </form> </md-content> <div class="md-actions" layout="row"> <span flex></span> <md-button ng-click="hide()"> Cancel </md-button> <md-button ng-click="answer(\'useful\')" class="md-primary"> Save </md-button> </div></md-dialog>',
+		      templateUrl: 'views/tareas/formulario.html',
 		      targetEvent: ev
 		    })
-		    .then(function(tipo, answer) {
-		    	comun.proyecto = {};
+
+		    .then(function(answer) {
+		    	// console.log($scope.tarea);
+		    	comun.tarea = {};
+		    	$scope.tarea = {};
+		    	comun.selectedUsers = [];
 		    }, function() {
-		    	comun.proyecto = {};
+		    	comun.tarea = {};
+		    	$scope.tarea = {};
+		    	comun.selectedUsers = [];
 		    	console.log('not then');
 		      $scope.alert = 'You cancelled the dialog.';
 		    });
 		};
+
 		
 		$scope.toggleSearch = function(element) {
 		    $scope.showSearch = !$scope.showSearch;
@@ -233,33 +312,33 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		    $mdSidenav(menuId).toggle();
 		};
 
-		$scope.agregar = function(){
-			console.log('agregar');
-			comun.add({
-				nombre : $scope.tarea.nombre,
-				prioridad : parseInt($scope.tarea.prioridad)
-			})
-
-			$scope.tarea.nombre = "";
-			$scope.tarea.prioridad = "";
-		}
-
-		$scope.masPrioridad = function(tarea) {
-			tarea.prioridad += 1;
-		}
-
-		$scope.menosPrioridad = function(tarea) {
-			tarea.prioridad -= 1;
-		}
-
-		$scope.eliminar = function(tarea) {
-			comun.delete(tarea);
-		}
-
-		$scope.procesaObjeto = function(tarea){
+		$scope.editTarea = function(tarea, ev){
+			console.log('tarea', tarea);
 			comun.tarea = tarea;
-			$state.go('editar'); // vista a la que se va, parametros hacia la vista
+			$scope.showAddTarea(ev);
+			
 		}
+
+		$scope.showConfirmTarea = function(ev, item) {
+		    comun.confirm = {
+		    	model : 'Tarea',
+		    	delete : false,
+		    	item : item,
+		    	msg : '¿Realmente desea eliminar la tarea "'+ item.nombre +'"'
+		    };
+		    console.log('aqui llego');
+		    $mdDialog.show({
+		      controller: 'ctrlConfirm',
+		      templateUrl: 'views/general/confirm.html',
+		      targetEvent: ev
+		    })
+		    .then(function(tipo, answer) {
+		    	comun.confirm = {};
+		    }, function() {
+		    	comun.confirm = {};
+		    	console.log('not then');
+		    });
+		};
 
 
 		
@@ -287,7 +366,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				  	}; // poner else if para tareas, y asi utilizar el mismo modal
 		  		}else{
 		  			console.log('else', comun.proyecto);
-		  			comun.updateProject(comun.proyecto);
+		  			comun.updateProject($scope.proyecto);
 		  			$scope.hide();
 		  		}
 			  	
@@ -295,19 +374,50 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		  };	
 	})
 	.controller('tareaModal', function($scope, $mdDialog, comun){
+		$scope.tarea = comun.tarea;
+		console.log('comuntarea', comun.tarea);
 		$scope.tipos = comun.tipos;
 		$scope.status = comun.status;
 		$scope.users = comun.users;
 
-		// parte de chips de usuarios*****************************
+		
+		// console.log('aqui llego');
+		comun.getAllProjects();
+		// console.log('aqui NO');
+		$scope.proyectos = comun.proyectos;
+
+		// parte de chips de usuarios*************************************************************************
 
 		$scope.printVeg = function(){
 			console.log('veggies', comun.users);
 		}
 
+		// if para cuando es editar, llenamos el $scope
+		if (typeof comun.tarea._id != 'undefined') {
+			console.log('length', comun.tarea);
+
+			if($scope.tarea.fecha_plan) { // si viene una fecha la convertimos
+				$scope.tarea.fecha_plan = new Date($scope.tarea.fecha_plan);
+			}
+
+			if($scope.tarea.fecha_termino) { // si viene una fecha la convertimos
+				$scope.tarea.fecha_termino = new Date($scope.tarea.fecha_termino);
+			}
+
+			// validar si no tiene proyecto , de lo contrario marca error
+			if (typeof $scope.tarea.projects != 'undefined') {
+				// console.log(typeof $scope.tarea.projects);
+				$scope.proyectoSelected = $scope.tarea.projects._id;
+				// console.log('despues');
+			}
+
+			console.log($scope.tarea);
+		}
+
 		// problema con el orden de las funciones, aparentemente lee todo en cascada(o demasiado rapido)
 		$scope.querySearch = $scope.querySearch;
-		$scope.selectedUsers = [];
+		$scope.selectedUsers = comun.selectedUsers;
+		// console.log('selectedUsers', $scope.selectedUsers);
 		$scope.autocompleteDemoRequireMatch = true;
 		$scope.transformChip = $scope.transformChip;
 		// $scope.vegetables = comun.users;
@@ -316,7 +426,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 
 		$scope.transformChip = function(chip) {
-		  console.log('transformChip');
+		  // console.log('transformChip');
 		  // If it is an object, it's already a known chip
 		  if (angular.isObject(chip)) {
 		    return chip;
@@ -324,7 +434,6 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		  // Otherwise, create a new one
 		  return { name: chip, type: 'new' }
 		}
-
 		/**
 		 * Search for vegetables.
 		 */
@@ -337,56 +446,84 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		 * Create filter function for a query string
 		 */
 		$scope.createFilterFor = function(query) {
-			console.log(query);
+			// console.log(query);
 		  var lowercaseQuery = angular.lowercase(query);
 		  return $scope.filterFn = function(vegetable) {
-		  	console.log(vegetable);
+		  	// console.log(vegetable);
 		    return (vegetable._lowername.indexOf(lowercaseQuery) === 0) ||
 		        (vegetable._lowertype.indexOf(lowercaseQuery) === 0);
 		  };
 		}
+
 		$scope.hide = function() {
-		    $mdDialog.hide();
-		    comun.proyecto = {};
+		    comun.tarea = {};
+		    comun.selectedUsers = [];
+		    // console.log($scope.proyectoSelected);
 		    console.log('hide');
+		    $mdDialog.hide();
 		  };
 		  $scope.cancel = function() {
 		    $mdDialog.cancel();
-		    comun.proyecto = {};
+		    comun.tarea = {};
+		    comun.selectedUsers = [];
 		    console.log('cancel');
 		  };
 		  $scope.answer = function(tipo) {
-		  	
-		  	if (tipo == 'proyecto') {
-		  		if (typeof $scope.proyecto._id == 'undefined') {
-		  			// console.log('etro');
-		  			if ($scope.projectForm.$valid) {
-				  		comun.addProject($scope.proyecto);
-				  		$mdDialog.hide();
-				  	}; // poner else if para tareas, y asi utilizar el mismo modal
-		  		}else{
-		  			console.log('else', comun.proyecto);
-		  			comun.updateProject(comun.proyecto);
-		  			$scope.hide();
-		  		}
-			  	
-		  	}
+			comun.usuariosAsignados = [];
+			// console.log('new selectedUsers',$scope.selectedUsers);return;
+
+			if ($scope.selectedUsers.length > 0) {
+				for (var i = 0; i < $scope.selectedUsers.length; i++) {
+					comun.usuariosAsignados.push($scope.selectedUsers[i].id);
+				};
+				$scope.tarea.users = comun.usuariosAsignados;
+			}
+// 
+			console.log($scope.proyectoSelected);
+
+			if (typeof $scope.proyectoSelected != 'undefined') {
+				$scope.tarea.projects = $scope.proyectoSelected;
+			}
+			// console.log($scope.tarea);
+			// return;
+
+	  		if (typeof $scope.tarea._id == 'undefined') {
+	  			// console.log('etro');
+	  			if ($scope.tareasForm.$valid) {
+					comun.add($scope.tarea);
+			  		$mdDialog.hide();
+			  	}; // poner else if para tareas, y asi utilizar el mismo modal
+	  		}else{
+
+	  			// console.log('scope tarea',$scope.tarea);
+	  			// console.log('comun',comun.tarea);
+	  			comun.update(comun.tarea);
+	  			$scope.hide();
+	  		}
 		  };	
 	})
-	// .controller('ctrlEditar', function($scope, $state, comun){
 
-	// 	$scope.tarea = comun.tarea;
+	.controller('ctrlConfirm', function($scope, comun, $mdBottomSheet, $mdSidenav, $mdDialog) {
+		$scope.confirm = comun.confirm;
 
-	// 	$scope.actualizar = function(){
-	// 		comun.update($scope.tarea);
-	// 		$state.go('alta');
-	// 	}
+		$scope.button = function() {
+			if (comun.confirm.model == 'Proyecto') {
+				comun.deleteProject(comun.confirm.item);
+			}else if(comun.confirm.model == 'Tarea'){
+				comun.delete(comun.confirm.item);
+			}
 
-	// 	$scope.eliminar = function(){
-	// 		comun.delete($scope.tarea);
-	// 		$state.go('alta');
-	// 	}
-	// })
+			comun.confirm = {};
+	    	$mdDialog.hide();
+		}
+
+		$scope.cancel = function() {
+		    $mdDialog.cancel();
+		    comun.confirm = {};
+		};
+
+	})
+
 	.directive('projectThumb', function() {
 	  return {
 	    replace: true,
