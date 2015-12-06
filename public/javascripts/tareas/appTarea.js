@@ -14,7 +14,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 		$urlRouterProvider.otherwise('proyectos'); // si no declaras un estado inicial, se va a ir a alta por default
 
-		 var customBlueMap = 		$mdThemingProvider.extendPalette('light-blue', {
+		 var customBlueMap = $mdThemingProvider.extendPalette('light-blue', {
 		    'contrastDefaultColor': 'light'
 		  });
 		  $mdThemingProvider.definePalette('customBlue', customBlueMap);
@@ -43,6 +43,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		comun.tipos = ['PLANIFICADA', 'MEJORA', 'CORRECCION'];
 		comun.status = ['PAUSA', 'PROCESO', 'ESPERA', 'TERMINADA', 'CANCELADA'];
 		comun.usuariosAsignados = [];
+		comun.propias = false;
 
 		comun.projects = 0;
 
@@ -77,6 +78,37 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			});
 		}
 
+		// ************* propias *****************
+		comun.getTareasPropias = function() {
+			return $http.get('/tareas_propias') // http.get parsea el objeto de datos de la base de datos a un arreglo
+			.success(function(data){
+				angular.copy(data, comun.tareas);
+				comun.getAllPendPropias();
+				comun.getAllFinPropias();
+				return comun.tareas;
+			});
+		}
+
+		comun.getAllPendPropias = function(){
+			return $http.get('/tareas_pend_propias') //http.get parsea el objeto de datos de la base de datos a un arreglo
+			.success(function(data){
+				angular.copy(data, comun.tareas_pend);
+				
+				return comun.tareas_pend;
+			});
+		}
+
+		comun.getAllFinPropias = function(){
+			return $http.get('/tareas_fin_propias') //http.get parsea el objeto de datos de la base de datos a un arreglo
+			.success(function(data){
+				angular.copy(data, comun.tareas_fin);
+				
+				return comun.tareas_fin;
+			});
+		}
+
+		// **************** fin propias ***************
+
 		comun.add = function(tarea){
 			return $http.post('/tarea', tarea)
 			.success(function(tarea){
@@ -109,8 +141,14 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				var indice = comun.tareas.indexOf(tarea);
 				comun.tareas.splice(indice, 1); // Se elimina 1 tarea
 
-				comun.getAllFin();
-				comun.getAllPend();
+				if (comun.propias) {
+					comun.getAllPendPropias();
+					comun.getAllFinPropias();
+				}else{
+					comun.getAllFin();
+					comun.getAllPend();
+				}
+
 			})
 		}
 
@@ -119,7 +157,6 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			return $http.get('/proyectos/proyectos') //http.get parsea el objeto de datos de la base de datos a un arreglo
 			.success(function(data){
 				angular.copy(data, comun.proyectos);
-				
 				return comun.proyectos;
 			})
 		}
@@ -204,7 +241,24 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		}
 
 		return comun;
-	}) 
+	})
+	.controller('ctrlMenu', function($scope, $state, comun, $mdBottomSheet, $mdSidenav, $mdDialog){
+		
+		$scope.openProjects = function() {
+			$state.go('proyectos');
+		}
+
+		$scope.openAssignments = function() {
+			comun.propias = false;
+			$state.go('tareas');
+		}
+
+		$scope.openMyAssignments = function() {
+			comun.propias = true;
+			comun.getTareasPropias();
+			$state.go('tareas');
+		}
+	})
 	.controller('ctrlProyectos', function($scope, $state, comun, $mdBottomSheet, $mdSidenav, $mdDialog){
 		$scope.proyecto = {};
 

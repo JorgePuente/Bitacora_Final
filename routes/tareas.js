@@ -26,20 +26,6 @@ router.get('/tareas', function(req, res, next){
 	})
 });
 
-//GET - Metodo para listar tareas pertenecientes a un proyecto
-// router.get('/tareas_pend', function(req, res, next){
-// 	console.log('aqui estoy');
-// 	Tareas.find()
-// 		.or([{status : 'PAUSA'}, {status : 'PROCESO'}, {status : 'ESPERA'}])
-// 		.populate('users')
-// 		.populate('projects')
-// 		.exec(function(err, tareas){
-// 			if(err){return next(err)}
-
-// 			res.json(tareas)
-// 		});
-// });
-
 //GET - Metodo para listar tareas pendientes
 router.get('/tareas_pend', function(req, res, next){
 	console.log('aqui estoy');
@@ -69,6 +55,52 @@ router.get('/tareas_fin', function(req, res, next){
 			res.json(tareas)
 		});
 });
+
+// *************************** TAREAS PROPIAS-***********************
+
+//GET - Metodo para listar tareas pertenecientes a un usuario
+router.get('/tareas_propias', function(req, res, next){
+	Tareas.find({'users' : req.session.user._id})
+	.populate('projects')
+	.populate('users')
+	.exec(function(err, tareas){
+		if(err){return next(err)}
+		
+		res.json(tareas)
+	})
+});
+
+//GET - Metodo para listar tareas pendientes de un usuario
+router.get('/tareas_pend_propias', function(req, res, next){
+	console.log('aqui estoy');
+	Tareas.find({'users' : req.session.user._id})
+		// .where('status').equals('PAUSA')
+		.or([{status : 'PAUSA'}, {status : 'PROCESO'}, {status : 'ESPERA'}])
+		.populate('users')
+		.populate('projects')
+		.exec(function(err, tareas){
+			if(err){return next(err)}
+
+			res.json(tareas)
+		});
+});
+
+//GET - Metodo para listar tareas finalizadas de un usuario
+router.get('/tareas_fin_propias', function(req, res, next){
+	console.log('aqui estoy');
+	Tareas.find({'users' : req.session.user._id})
+		// .where('status').equals('PAUSA')
+		.or([{status : 'TERMINADA'}, {status : 'CANCELADA'}])
+		.populate('users')
+		.populate('projects')
+		.exec(function(err, tareas){
+			if(err){return next(err)}
+
+			res.json(tareas)
+		});
+});
+
+// *************************** FIN TAREAS PROPIAS ***********************
 
 //POST - Agregar Tareas
 router.post('/tarea', function(req, res, next){

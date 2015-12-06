@@ -15,10 +15,10 @@
         <div class="md-body-2"><b><%= user.username %></b></div>
         <div class="md-body-1"><%= user.correo_electronico %></div>
       </md-toolbar>
-      <md-list class="menu_prin">
+      <md-list class="menu_prin" ng-controller="ctrlMenu">
         
-        <a href="#/proyectos">
-          <md-list-item class="md-2-line" role="link" md-ink-ripple>
+        <a>
+          <md-list-item class="md-2-line" role="link" md-ink-ripple ng-click="openProjects()">
 
             <md-item-content md-ink-ripple layout="row" layout-align="start center" class="side_menu">
               <div class="inset">
@@ -30,8 +30,8 @@
           </md-list-item>
         </a>
 
-        <a href="#/tareas">
-          <md-list-item class="md-2-line" role="link" md-ink-ripple>
+        <a>
+          <md-list-item class="md-2-line" role="link" md-ink-ripple ng-click="openAssignments()">
 
             <md-item-content md-ink-ripple layout="row" layout-align="start center" class="side_menu">
               <div class="inset">
@@ -45,7 +45,7 @@
         </a>
 
         <a>
-          <md-list-item class="md-2-line" role="link" md-ink-ripple>
+          <md-list-item class="md-2-line" role="link" md-ink-ripple ng-click="openMyAssignments()">
 
             <md-item-content md-ink-ripple layout="row" layout-align="start center" class="side_menu">
               <div class="inset">
