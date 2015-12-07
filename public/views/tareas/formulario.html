@@ -1,18 +1,32 @@
-<md-dialog aria-label="Form"> 
-	<md-content class="md-padding">
-		<form name="tareasForm">
+<md-dialog aria-label="Form" class="tareasForm"> 
+	<md-content style="background-color:white;" class="md-padding">
+		<form name="tareasForm" id="tarForm">
+
+			<span id="icon_type">
+				<ng-md-icon class="add_i" icon="note_add" size="64" ng-show="!tarea._id"></ng-md-icon>
+				<ng-md-icon class="edit_i" icon="edit" size="64" ng-show="tarea._id"></ng-md-icon>
+			</span>
+			<h2>{{tarea.nombre || "Nueva Tarea"}}</h2>
+
+			<!-- <div layout layout-sm="column">
+				<md-input-container>
+					<md-checkbox ng-model="tarea.terminada" class="blue">
+					   Terminada
+					</md-checkbox>
+				</md-input-container>
+			</div> -->
 
 			<div layout layout-sm="column">
 				<md-input-container flex>
 					<label>Nombre de la tarea</label>
-					<input ng-model="tarea.nombre">
+					<input ng-model="tarea.nombre" ng-required="true">
 				</md-input-container>
 			</div>
 
 			<div layout layout-sm="column">
 				<md-input-container flex>
 					<label>Tipo</label>
-					<md-select ng-model="tarea.tipo" flex>
+					<md-select ng-model="tarea.tipo" ng-required="true" flex>
 						<md-option class="icon_tipo" ng-repeat="tipo in tipos" value="{{tipo}}" flex>
 							<ng-md-icon class="type_icon" icon="desktop_mac" ng-show="tipo == 'PLANIFICADA'"></ng-md-icon> 
 							<ng-md-icon class="type_icon" icon="publish" ng-show="tipo == 'MEJORA'"></ng-md-icon>
@@ -27,7 +41,7 @@
 			<div layout layout-sm="column">
 				<md-input-container flex>
 					<label>Status</label>
-					<md-select ng-model="tarea.status" flex>
+					<md-select ng-model="tarea.status" ng-required="true" flex>
 						<md-option class="img_status" ng-repeat="stat in status" value="{{stat}}" flex>
 							<pause-thumb ng-show="stat == 'PAUSA'"></pause-thumb>
 							<proccess-thumb ng-show="stat == 'PROCESO'"></proccess-thumb>
@@ -43,11 +57,19 @@
 
 			<div layout layout-sm="column">
 				<md-input-container flex>
-					<md-datepicker ng-model="tarea.fecha_plan" md-placeholder="Plan término" aria-label="Fecha plan" md-min-date="today"></md-datepicker>
+					<label class="date_label">Fecha inicio</label>
+					<md-datepicker ng-model="tarea.fecha_inicio" ng-required="true" md-placeholder="Fecha Inicio" aria-label="Fecha Inicio" onkeypress="return false;"></md-datepicker>
 				</md-input-container>
 
 				<md-input-container flex>
-					<md-datepicker ng-model="tarea.fecha_termino" md-placeholder="Fecha término" aria-label="Fecha plan" md-min-date="tarea.fecha_plan"></md-datepicker>
+					<label class="date_label">Fecha Plan</label>
+					<md-datepicker ng-model="tarea.fecha_plan" md-placeholder="Fecha Plan" aria-label="Fecha Plan" md-min-date="tarea.fecha_inicio" onkeypress="return false;"></md-datepicker>
+				</md-input-container>
+
+				<!-- // se muestra solo si marcamos la casilla de terminada del inicio del formulario -->
+				<md-input-container ng-show="tarea.status == 'TERMINADA'" flex> 
+					<label class="date_label">Fecha Término</label>
+					<md-datepicker ng-model="tarea.fecha_termino" md-placeholder="Fecha término" aria-label="Fecha Término" md-min-date="tarea.fecha_inicio" onkeypress="return false;"></md-datepicker>
 				</md-input-container>
 			</div>
 

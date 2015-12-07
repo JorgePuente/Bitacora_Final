@@ -19,16 +19,17 @@ var Usuarios = mongoose.model('Usuarios'); // Instancia del modelo Usuarios que 
 router.post('/register', function(req, res) {
     Usuarios.register(new Usuarios({ username : req.body.username, correo_electronico : req.body.correo_electronico}), req.body.password, function(err, usuario) {
         if (err) {
-        	console.log(err);
-            return res.render('login/appLogin', { usuario : usuario });
+        	res.json(err);
+            // return res.render('login/appLogin', { usuario : usuario });
+        }else{
+	        console.log('aqui estoy');
+
+	        passport.authenticate('local')(req, res, function () {
+	        	console.log('aqui entro');
+	            res.json(usuario);
+	        });
         }
 
-        console.log('aqui estoy');
-
-        passport.authenticate('local')(req, res, function () {
-        	console.log('aqui entro');
-            res.redirect('/');
-        });
     });
 });
 
@@ -46,11 +47,13 @@ router.post('/login', passport.authenticate('local'), function(req, res) {
 });
 
 router.get('/logout', function(req, res) {
-	console.log('logout', req.session.user);
+	// console.log('logout', req.session.user);
     req.logout();
     
-    req.session = null;
+    req.session.user = {};
+    console.log('logout');
 	// req.session.user = req.user;
+
     res.redirect('/login');
 });
 

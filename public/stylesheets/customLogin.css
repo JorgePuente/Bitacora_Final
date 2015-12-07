@@ -1,6 +1,7 @@
 body#login {
 	margin-left: 0;
 	margin-right: 0;
+	background-image:url(../images/tareas/bg.png);
 }
 
 #login .header-panel {
@@ -9,9 +10,10 @@ body#login {
 }
 
 #login .header-panel img{
-	width: 150px;
+	width: 250px;
 	display: block;
-	margin: 0 auto;
+	margin: 0px auto 0px;
+	padding-top: 25px;
 }
 
 #login .header-panel .pages{

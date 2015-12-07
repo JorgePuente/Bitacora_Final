@@ -55,6 +55,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     secret: 'eoncore',
+    store: new MongoStore({mongooseConnection: mongoose.connection })
   })
 );
 app.use(express.static(path.join(__dirname, 'public')));

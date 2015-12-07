@@ -16,6 +16,7 @@ var TareasSchema = new mongoose.Schema({
 	nombre: String,
 	descripcion : String,
 	tipo : { type: String, enum: tipos },
+	fecha_inicio : Date,
 	fecha_plan : Date,
 	fecha_termino : Date,
 	status : { type: String, enum: status },

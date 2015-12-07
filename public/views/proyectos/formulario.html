@@ -1,6 +1,14 @@
 <md-dialog aria-label="Mango (Fruit)"> 
 	<md-content class="md-padding"> 
-		<form name="projectForm"> 
+		<form id="projForm" name="projectForm"> 
+
+			<span id="icon_type">
+				<ng-md-icon class="add_i" icon="my_library_add" size="50" ng-show="!proyecto._id"></ng-md-icon>
+				<ng-md-icon class="edit_i" icon="edit" size="50" ng-show="proyecto._id"></ng-md-icon>
+			</span>
+
+			<h2>{{proyecto.titulo || "Nuevo Proyecto"}}</h2>
+			
 			<div layout layout-lg="column">  
 				<md-input-container flex> 
 					<label>Nombre del proyecto</label> 

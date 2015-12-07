@@ -139,6 +139,10 @@ md-dialog {
   width: 600px;
 }
 
+md-dialog.tareasForm{
+  width: 800px;
+}
+
 .md-virtual-repeat-container.md-autocomplete-suggestions-container {
   width : 350px;
   height: 250px;
@@ -172,4 +176,56 @@ md-autocomplete input:not(.md-input) {
 
 .md-select-menu-container.md-active md-select-menu > * {
   background-color: white !important;
+}
+
+md-checkbox.md-checked.blue .md-icon {
+ background-color: #14BBF1;
+}
+
+md-dialog #icon_type ng-md-icon {
+  float: right;
+}
+
+md-dialog #icon_type ng-md-icon.edit_i {
+  fill: #FB990A;
+}
+
+md-dialog #icon_type ng-md-icon.add_i {
+  fill: #2CBB0F;
+}
+
+.date_label {
+  position: absolute;
+  left: 70px;
+  top: 14px;
+}
+
+md-toast {
+  background-color: rgba(255, 10, 10, .8);
+}
+
+/*listbottom*/
+.lstBtm .md-subheader .md-subheader-inner {
+    display: block;
+    padding-left: 16px;
+    border-bottom: 1px dashed #104D72;
+    font-size: 20px;
+    font-weight: bold;
+    font-style: italic;
+    color: #03B5EE;
+}
+
+span.fecha_p{
+    position: absolute;
+    right: 50px;
+    top: 10px;
+    color: #848484;
+}
+
+#goBack h3 {
+  color:#777;
+}
+
+#goBack ng-md-icon {
+  fill:#777;
 }

@@ -1,0 +1,22 @@
+<md-bottom-sheet class="lstBtm md-list md-has-header">
+	<md-subheader>Opciones</md-subheader>
+	<md-list>
+		<md-item style="display:block; margin:15px 0;">
+			<md-item-content md-ink-ripple flex class="inset">
+				<a flex aria-label="Enviármelo al correo" ng-click="sendMail()">
+					<ng-md-icon icon="email" style="fill:#ccc;"></ng-md-icon>
+					<span class="md-inline-list-icon-label">Enviármelo al correo</span>
+				</a>
+			</md-item-content>
+		</md-item>
+
+		<md-item style="display:block; margin:15px 0;">
+			<md-item-content md-ink-ripple flex class="inset">
+				<a flex aria-label="Exportar a Excel" ng-click="excelExport()">
+					<ng-md-icon icon="input" style="fill:#ccc;"></ng-md-icon>
+					<span class="md-inline-list-icon-label">Exportar a Excel</span>
+				</a>
+			</md-item-content>
+		</md-item>
+	</md-list>
+</md-bottom-sheet>

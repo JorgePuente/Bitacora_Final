@@ -1,0 +1,40 @@
+<md-dialog aria-label="Mango (Fruit)"> 
+	<md-content class="md-padding"> 
+		<form id="usForm" name="userForm"> 
+
+			<span id="icon_type">
+				<ng-md-icon class="add_i" icon="person_add" size="50" ng-show="!usuario._id"></ng-md-icon>
+				<ng-md-icon class="edit_i" icon="edit" size="50" ng-show="usuario._id"></ng-md-icon>
+			</span>
+
+			<h2>{{usuario.username || "Nuevo Usuario"}}</h2>
+			
+			<div layout layout-lg="column">  
+				<md-input-container flex> 
+					<label>Nombre del Usuario</label> 
+					<input ng-model="usuario.username" ng-required="true"> 
+				</md-input-container> 
+			</div>
+
+			<div layout layout-lg="column">  
+				<md-input-container flex> 
+					<label>Correo electrónico</label> 
+					<input ng-model="usuario.correo_electronico" ng-required="true"> 
+				</md-input-container> 
+			</div>
+
+			<div layout layout-lg="column">  
+				<md-input-container flex> 
+					<label>Password</label> 
+					<input type="password" ng-model="usuario.password" ng-required="true"> 
+				</md-input-container> 
+			</div> 
+		</form> 
+	</md-content> 
+
+	<div class="md-actions" layout="row"> 
+		<span flex></span> 
+		<md-button ng-click="cancel()"> Cancelar </md-button> 
+		<md-button ng-click="answer()" class="md-primary"> Guardar </md-button> 
+	</div>
+</md-dialog>

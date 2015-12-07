@@ -11,8 +11,13 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				templateUrl: 'views/proyectos/proyectos.html',
 				controller: 'ctrlProyectos'
 			})
+			.state('usuarios', {// le indicamos el estado con el que trabajara state provider
+				url: '/usuarios',
+				templateUrl: 'views/usuarios/usuarios.html',
+				controller: 'ctrlUsuarios'
+			})
 
-		$urlRouterProvider.otherwise('proyectos'); // si no declaras un estado inicial, se va a ir a alta por default
+		$urlRouterProvider.otherwise('proyectos'); // si no declaras un estado inicial, se va a ir a proyectos por default
 
 		 var customBlueMap = $mdThemingProvider.extendPalette('light-blue', {
 		    'contrastDefaultColor': 'light'
@@ -29,23 +34,30 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 	})
 	//hay que inyectarle el http para poder consumir los metodos GET, PUT, DELETE, etc
-	.factory('comun', function($http){ // permite mantener informacion vigente a traves de todas las vistas
+	.factory('comun', function($http, $location){ // permite mantener informacion vigente a traves de todas las vistas
 		var comun = {};
 		comun.tareas = [];
 		comun.tareas_pend = [];
 		comun.tareas_fin = [];
 		comun.tarea = {};
+		comun.tareasTitulo = '';
 		comun.proyectos = [];
 		comun.proyecto = {};
 		comun.usuarios = [];
+		comun.listUsuarios = []; //variable del control de usuarios
+		comun.singleUser = {}; // variable del control de usuarios
 		comun.users = []; // variable que se utilizara para los chips de usuarios en tareas
-		comun.usuario = {};
+		comun.usuario = {}; 
 		comun.tipos = ['PLANIFICADA', 'MEJORA', 'CORRECCION'];
 		comun.status = ['PAUSA', 'PROCESO', 'ESPERA', 'TERMINADA', 'CANCELADA'];
 		comun.usuariosAsignados = [];
 		comun.propias = false;
+		comun.saveStatus = {};
+		comun.successExcel = false;
 
-		comun.projects = 0;
+		comun.projects = false;
+
+		comun.toastClass = "valid";
 
 		// objeto que contendrá la información para la ventana de dialogo de confirmacion de eliminacion de elemento
 		comun.confirm = {};
@@ -56,6 +68,10 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			.success(function(data){
 				angular.copy(data, comun.tareas);
 				
+				comun.tareasTitulo = 'Todas las tareas';
+				comun.getAllPend();
+				comun.getAllFin();
+
 				return comun.tareas;
 			});
 		}
@@ -83,6 +99,8 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			return $http.get('/tareas_propias') // http.get parsea el objeto de datos de la base de datos a un arreglo
 			.success(function(data){
 				angular.copy(data, comun.tareas);
+				
+				comun.tareasTitulo = 'Tareas asignadas a mi';
 				comun.getAllPendPropias();
 				comun.getAllFinPropias();
 				return comun.tareas;
@@ -130,8 +148,16 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				var indice = comun.tareas.indexOf(tarea);
 				comun.tareas[indice] = data;
 
-				comun.getAllFin();
-				comun.getAllPend();
+				if (comun.propias) {
+					comun.getAllPendPropias();
+					comun.getAllFinPropias();
+				}else if(comun.projects){
+					comun.getAllFinProject();
+					comun.getAllPendProject();
+				}else{
+					comun.getAllFin();
+					comun.getAllPend();
+				}
 			})
 		}
 
@@ -144,6 +170,9 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				if (comun.propias) {
 					comun.getAllPendPropias();
 					comun.getAllFinPropias();
+				}else if(comun.projects){
+					comun.getAllFinProject();
+					comun.getAllPendProject();
 				}else{
 					comun.getAllFin();
 					comun.getAllPend();
@@ -191,6 +220,8 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 			return $http.get('/login/usuarios') //http.get parsea el objeto de datos de la base de datos a un arreglo
 			.success(function(data){
 				angular.copy(data, comun.usuarios);
+				// angular.copy(data, comun.listUsuarios);
+
 				// console.log('Aqui me trabo');
 				// console.log('comun usuarios', comun.usuarios);
 				
@@ -204,6 +235,8 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 		comun.selectedUsers = [];
 
+
+		//funciones para chips en formulario de tareas
 		comun.selectedUsersFill = function(){
 			// console.log('Aqui me trabo selectedUsersFill', comun.tarea);
 			comun.selectedUsers = comun.transformUsuarios(comun.tarea.users);
@@ -226,18 +259,112 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 					});
 		}
 
-		comun.findProjectAssignments = function(item){
-			return $http.get('/tarea/proyect') //http.get parsea el objeto de datos de la base de datos a un arreglo
-			.success(function(data){
-				angular.copy(data, comun.usuarios);
-				// console.log('comun usuarios', comun.usuarios);
-				
-				//********************* llenar objeto para chips de usuarios
-				comun.users = comun.transformUsuarios(comun.usuarios)
-				//********************* termino de llenar objeto para chips de usuarios
+		//funciones para control de usuarios///////////////////////////////
+		
+		comun.addUser = function(usuario){
+			return $http.post('/login/register', user)
+			.success(function(user){
+				if (user.name != 'BadRequestError') {
+					console.log('user',user);
+					comun.usuarios.push(user);
 
-				return comun.usuarios;
+				}else{
+					comun.saveStatus = user;
+				}
 			})
+		}
+
+		comun.updateUser = function(usuario){
+			comun.deleteUser(usuario);
+
+			return $http.post('/login/register', usuario)
+			.success(function(usuario){
+				if (usuario.name != 'BadRequestError') {
+					console.log('user',usuario);
+					comun.usuarios.push(usuario);
+
+				}else{
+					comun.saveStatus = user;
+				}
+			})
+		}
+
+		comun.deleteUser = function(user) {
+			return $http.delete('/login/usuario/' + user._id)
+			.success(function(){
+				var indice = comun.usuarios.indexOf(user);
+				comun.usuarios.splice(indice, 1);
+
+			})
+		}
+
+		//********************** TAREAS PROPIAS DE UN PROYECTO ********************//
+
+		comun.findProjectAssignments = function(item){
+			return $http.get('/tareas_project/'+item._id) //http.get parsea el objeto de datos de la base de datos a un arreglo
+			.success(function(data){
+				angular.copy(data, comun.tareas);
+				// console.log(item);
+				comun.tareasTitulo = 'Tareas del proyecto "' + item.titulo +'"';
+				comun.getAllPendProject(item._id);
+				comun.getAllFinProject(item._id);
+
+				return comun.tareas;
+			});
+		}
+
+		comun.getAllPendProject = function(project_id){
+			return $http.get('/tareas_pend_project/'+project_id) 
+			.success(function(data){
+				angular.copy(data, comun.tareas_pend);
+				
+				return comun.tareas_pend;
+			});
+		}
+
+		comun.getAllFinProject = function(project_id){
+			return $http.get('/tareas_fin_project/'+project_id) 
+			.success(function(data){
+				angular.copy(data, comun.tareas_fin);
+				
+				return comun.tareas_fin;
+			});
+		}
+
+		//************************* FIN TATEAS PROPIAS DE UN PROYECTO**************************//
+
+		comun.logout = function(){
+			return $http.get('/logout')
+			.success(function(){
+				console.log('logout');
+				location.reload();
+			});
+
+		}
+
+		comun.sendMail = function() {
+			var data = {};
+			data.tareas = comun.tareas;
+			data.subject = comun.tareasTitulo;
+
+			console.log('sendMail comun');
+			$http.post('/sendMail', data)
+			.success(function(){
+				console.log('success');
+			});
+		}
+
+		comun.excelExport = function() {
+			var data = {};
+			data.tareas = comun.tareas;
+			data.subject = comun.tareasTitulo;
+
+			console.log('excelExport comun');
+			$http.post('/excelExport', data)
+			.success(function(success){
+				console.log('succes', success);
+				comun.successExcel = success;
+			});
 		}
 
 		return comun;
@@ -250,13 +377,30 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 		$scope.openAssignments = function() {
 			comun.propias = false;
-			$state.go('tareas');
+			comun.projects = false;
+			comun.getAll();
+			comun.tareasTitulo = "Todas las tareas";
+
+			$state.go('tareas', {}, {reload: true});
+			// $state.go('tareas');
 		}
 
 		$scope.openMyAssignments = function() {
 			comun.propias = true;
+			comun.projects = false;
 			comun.getTareasPropias();
-			$state.go('tareas');
+			comun.tareasTitulo = "Tareas asignadas a mi";
+			$state.go('tareas', {}, {reload: true}); // esta linea recarga el scope de tareas, no hacia bien el cambio de titulo entre tareas y tareas propias
+			// $state.go('tareas');
+		}
+
+		$scope.openUsers = function() {
+			$state.go('usuarios');
+			// $state.go('tareas');
+		}
+
+		$scope.logout = function(){
+			comun.logout();
 		}
 	})
 	.controller('ctrlProyectos', function($scope, $state, comun, $mdBottomSheet, $mdSidenav, $mdDialog){
@@ -290,8 +434,11 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		}
 
 		$scope.projectAssignments = function(item){
-			// console.log(item._id);
+			comun.propias = false;
+			comun.projects = true;
 			comun.findProjectAssignments(item);
+			comun.tareasTitulo = 'Tareas del proyecto "'+ item.titulo +'"';
+			$state.go('tareas');
 		}
 
 		$scope.showConfirmProyecto = function(ev, item) {
@@ -318,11 +465,12 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		
 		$scope.alert = '';
 		$scope.today = new Date();
+		$scope.tareasTitulo = comun.tareasTitulo;
 
-		comun.getAll();
-		comun.getAllPend();
-		comun.getAllFin();
+		// comun.getAll();
 		comun.getAllUsuarios();
+
+		console.log(comun.tareasTitulo);
 
 		$scope.tareas = comun.tareas;
 		$scope.tarea = {};
@@ -330,6 +478,24 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		$scope.tareas_fin = comun.tareas_fin;
 		$scope.prioridades = ['Baja', 'Normal', 'Alta'];
 		$scope.tipos = comun.tipos;
+
+		$scope.sacaDiferencia = function(fecha_plan){
+			var fecha_p = new Date(fecha_plan);
+			// console.log(fecha_p);
+			// console.log($scope.today);
+			// console.log(fecha_p - $scope.today);
+			var dif = fecha_p - $scope.today
+			if (dif > 0) {
+				var timeDiff = Math.abs(fecha_p.getTime() - $scope.today.getTime());
+				var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+				return "Faltan aún "+ diffDays+"día(s)";
+			}else {
+				var timeDiff = Math.abs($scope.today.getTime() - fecha_p.getTime());
+				var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+				return "Vas "+ diffDays+"día(s) atrasado";
+			}
+			// return diffDays;
+		}
 
 		$scope.showAddTarea = function(ev) {
 			console.log(comun.tarea._id);
@@ -395,21 +561,75 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		};
 
 
+		$scope.showListBottomSheet = function($event) {
+		    $scope.alert = '';
+		    $mdBottomSheet.show({
+		      templateUrl: 'views/general/listBottom.html',
+		      controller: 'ctrlListBottom',
+		      targetEvent: $event
+		    }).then(function(clickedItem) {
+		      // $scope.alert = clickedItem.name + ' clicked!';
+		    });
+		};
 		
 	})
-	.controller('proyectoModal', function($scope, $mdDialog, comun){
+	.controller('proyectoModal', function($scope, $mdDialog, comun, $mdToast, $document){
 		$scope.proyecto = comun.proyecto;
+		
+		// ******************** TOAST *************************
+		var last = {
+		    bottom: false,
+		    top: true,
+		    left: false,
+		    right: true
+		};
+
+		$scope.toastPosition = angular.extend({},last);
+
+		$scope.getToastPosition = function() {
+		  $scope.sanitizePosition();
+
+		  return Object.keys($scope.toastPosition)
+		    .filter(function(pos) { return $scope.toastPosition[pos]; })
+		    .join(' ');
+		};
+
+		$scope.sanitizePosition = function() {
+		  var current = $scope.toastPosition;
+
+		  if ( current.bottom && last.top ) current.top = false;
+		  if ( current.top && last.bottom ) current.bottom = false;
+		  if ( current.right && last.left ) current.left = false;
+		  if ( current.left && last.right ) current.right = false;
+
+		  last = angular.extend({},current);
+		}
+
+		$scope.showInvalidToast = function() {
+			comun.toastClass = "error";
+		  	$mdToast.show({
+		  		controller: 'ctrlToast',
+		  		templateUrl: 'views/general/invalidToast.html',
+		  		parent : $document[0].querySelector('#projForm'),
+		  		hideDelay: 5000,
+		  		position: $scope.getToastPosition()
+		  	});
+		};
+		// ******************** FIN TOAST *************************
+
 		$scope.hide = function() {
 		    $mdDialog.hide();
 		    comun.proyecto = {};
 		    console.log('hide');
-		  };
-		  $scope.cancel = function() {
+		};
+
+		$scope.cancel = function() {
 		    $mdDialog.cancel();
 		    comun.proyecto = {};
 		    console.log('cancel');
-		  };
-		  $scope.answer = function(tipo) {
+		};
+		
+		$scope.answer = function(tipo) {
 		  	
 		  	if (tipo == 'proyecto') {
 		  		if (typeof $scope.proyecto._id == 'undefined') {
@@ -417,22 +637,74 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		  			if ($scope.projectForm.$valid) {
 				  		comun.addProject($scope.proyecto);
 				  		$mdDialog.hide();
-				  	}; // poner else if para tareas, y asi utilizar el mismo modal
+				  	}else{
+				  		$scope.showInvalidToast();
+				  	}
 		  		}else{
-		  			console.log('else', comun.proyecto);
-		  			comun.updateProject($scope.proyecto);
-		  			$scope.hide();
+		  			if ($scope.projectForm.$valid) {
+			  			comun.updateProject($scope.proyecto);
+			  			$scope.hide();
+		  			}else {
+		  				$scope.showInvalidToast();
+		  			}
 		  		}
 			  	
 		  	}
-		  };	
+		};
+
 	})
-	.controller('tareaModal', function($scope, $mdDialog, comun){
+	.controller('tareaModal', function($scope, $mdDialog, comun, $mdToast, $document){
 		$scope.tarea = comun.tarea;
+		
+		if (!comun.tarea.fecha_termino) {
+			comun.tarea.fecha_termino = new Date();
+		}
+
 		console.log('comuntarea', comun.tarea);
 		$scope.tipos = comun.tipos;
 		$scope.status = comun.status;
 		$scope.users = comun.users;
+
+		// ******************** TOAST *************************
+		var last = {
+		    bottom: false,
+		    top: true,
+		    left: false,
+		    right: true
+		};
+
+		$scope.toastPosition = angular.extend({},last);
+
+		$scope.getToastPosition = function() {
+		  $scope.sanitizePosition();
+
+		  return Object.keys($scope.toastPosition)
+		    .filter(function(pos) { return $scope.toastPosition[pos]; })
+		    .join(' ');
+		};
+
+		$scope.sanitizePosition = function() {
+		  var current = $scope.toastPosition;
+
+		  if ( current.bottom && last.top ) current.top = false;
+		  if ( current.top && last.bottom ) current.bottom = false;
+		  if ( current.right && last.left ) current.left = false;
+		  if ( current.left && last.right ) current.right = false;
+
+		  last = angular.extend({},current);
+		}
+
+		$scope.showInvalidToast = function() {
+			comun.toastClass = "error";
+		  	$mdToast.show({
+		  		controller: 'ctrlToast',
+		  		templateUrl: 'views/general/invalidToast.html',
+		  		parent : $document[0].querySelector('#tarForm'),
+		  		hideDelay: 10000,
+		  		position: $scope.getToastPosition()
+		  	});
+		};
+		// ******************** FIN TOAST *************************
 
 		
 		// console.log('aqui llego');
@@ -449,6 +721,10 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		// if para cuando es editar, llenamos el $scope
 		if (typeof comun.tarea._id != 'undefined') {
 			console.log('length', comun.tarea);
+
+			if($scope.tarea.fecha_inicio) { // si viene una fecha la convertimos
+				$scope.tarea.fecha_inicio = new Date($scope.tarea.fecha_inicio);
+			}
 
 			if($scope.tarea.fecha_plan) { // si viene una fecha la convertimos
 				$scope.tarea.fecha_plan = new Date($scope.tarea.fecha_plan);
@@ -515,15 +791,19 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		    // console.log($scope.proyectoSelected);
 		    console.log('hide');
 		    $mdDialog.hide();
-		  };
-		  $scope.cancel = function() {
+		};
+		
+		$scope.cancel = function() {
 		    $mdDialog.cancel();
 		    comun.tarea = {};
 		    comun.selectedUsers = [];
 		    console.log('cancel');
-		  };
-		  $scope.answer = function(tipo) {
+		};
+		
+		$scope.answer = function(tipo) {
+
 			comun.usuariosAsignados = [];
+			// console.log('is valid?', $scope.tareasForm.$valid);return;
 			// console.log('new selectedUsers',$scope.selectedUsers);return;
 
 			if ($scope.selectedUsers.length > 0) {
@@ -533,7 +813,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				$scope.tarea.users = comun.usuariosAsignados;
 			}
 // 
-			console.log($scope.proyectoSelected);
+			// console.log($scope.proyectoSelected);
 
 			if (typeof $scope.proyectoSelected != 'undefined') {
 				$scope.tarea.projects = $scope.proyectoSelected;
@@ -544,17 +824,218 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 	  		if (typeof $scope.tarea._id == 'undefined') {
 	  			// console.log('etro');
 	  			if ($scope.tareasForm.$valid) {
+	  				
+		  			// Vaciamos fecha termino, en caso de no este terminada la tarea
+	  				if ($scope.tarea.status != 'TERMINADA') {
+						delete $scope.tarea.fecha_termino;
+					}
+
 					comun.add($scope.tarea);
-			  		$mdDialog.hide();
-			  	}; // poner else if para tareas, y asi utilizar el mismo modal
+			  		$scope.hide();
+			  	}else{		
+					$scope.showInvalidToast();
+			  	}
 	  		}else{
 
-	  			// console.log('scope tarea',$scope.tarea);
-	  			// console.log('comun',comun.tarea);
-	  			comun.update(comun.tarea);
-	  			$scope.hide();
+	  			if ($scope.tareasForm.$valid) {
+
+	  				// console.log($scope.tarea);
+		  			
+		  			// Vaciamos fecha termino, en caso de no este terminada la tarea
+					if ($scope.tarea.status != 'TERMINADA') {
+						delete $scope.tarea.fecha_termino;
+					}
+					
+
+		  			comun.update($scope.tarea);
+		  			$scope.hide();
+			  	}else {
+					$scope.showInvalidToast();
+			  	}
 	  		}
-		  };	
+		};	
+	})
+
+	.controller('ctrlUsuarios', function($scope, comun, $mdBottomSheet, $mdSidenav, $mdDialog) {
+
+		$scope.user = {};
+		comun.getAllUsuarios();
+		$scope.usuarios = comun.usuarios;
+
+		$scope.showAddUser = function(ev) {
+		    $mdDialog.show({
+		      	controller: 'usuarioModal',
+		      	templateUrl: 'views/usuarios/formulario.html',
+		      	targetEvent: ev
+		    })
+		    .then(function(tipo, answer) {
+		    	comun.usuario = {};
+		    	// $scope.proyecto = {};
+		    }, function() {
+		    	comun.usuario = {};
+		    	// $scope.proyecto = {};
+		    	console.log('not then');
+		    });
+		};
+
+		$scope.editUser = function(user, ev){
+			console.log('edit iser', user);
+			comun.usuario = user;
+			$scope.showAddUser(ev);
+			// comun.updateProject(project);
+		}
+
+		$scope.userAssignments = function(item){
+			comun.propias = false;
+			comun.projects = true;
+			comun.findProjectAssignments(item);
+			comun.tareasTitulo = 'Tareas del proyecto "'+ item.titulo +'"';
+			$state.go('tareas');
+		}
+
+		$scope.showConfirmUser = function(ev, item) {
+		    comun.confirm = {
+		    	model : 'Usuario',
+		    	delete : false,
+		    	item : item,
+		    	msg : '¿Realmente desea eliminar al usuario "'+ item.username +'"'
+		    };
+		    $mdDialog.show({
+		      controller: 'ctrlConfirm',
+		      templateUrl: 'views/general/confirm.html',
+		      targetEvent: ev
+		    })
+		    .then(function(tipo, answer) {
+		    	comun.confirm = {};
+		    }, function() {
+		    	comun.confirm = {};
+		    	console.log('not then');
+		    });
+		};
+
+	})
+
+	.controller('usuarioModal', function($scope, $mdDialog, comun, $mdToast, $document){
+		$scope.usuario = comun.usuario;
+		
+		// ******************** TOAST *************************
+		var last = {
+		    bottom: false,
+		    top: true,
+		    left: false,
+		    right: true
+		};
+
+		$scope.toastPosition = angular.extend({},last);
+
+		$scope.getToastPosition = function() {
+		  $scope.sanitizePosition();
+
+		  return Object.keys($scope.toastPosition)
+		    .filter(function(pos) { return $scope.toastPosition[pos]; })
+		    .join(' ');
+		};
+
+		$scope.sanitizePosition = function() {
+		  var current = $scope.toastPosition;
+
+		  if ( current.bottom && last.top ) current.top = false;
+		  if ( current.top && last.bottom ) current.bottom = false;
+		  if ( current.right && last.left ) current.left = false;
+		  if ( current.left && last.right ) current.right = false;
+
+		  last = angular.extend({},current);
+		}
+
+		$scope.showInvalidToast = function() {
+			comun.toastClass = "error";
+		  	$mdToast.show({
+		  		controller: 'ctrlToast',
+		  		templateUrl: 'views/general/invalidToast.html',
+		  		parent : $document[0].querySelector('#usForm'),
+		  		hideDelay: 6000,
+		  		position: $scope.getToastPosition()
+		  	});
+		};
+
+		//******************** FIN TOAST *********************
+
+		$scope.hide = function() {
+		    $mdDialog.hide();
+		    comun.usuario = {};
+		    console.log('hide');
+		};
+		
+		$scope.cancel = function() {
+		    $mdDialog.cancel();
+		    comun.usuario = {};
+		    console.log('cancel');
+		};
+		
+		$scope.answer = function(tipo) {
+			console.log('answer');
+		  	
+		  	if (typeof $scope.usuario._id == 'undefined') {
+	  			if ($scope.userForm.$valid) {
+			  		
+			  		comun.addUser($scope.usuario);
+					setTimeout(function(){
+				  		if (comun.saveStatus.name == "BadRequestError") {
+							console.log('BadRequestError');
+
+				  			$scope.showInvalidToast();
+				  			return;
+				  		}else{
+				  			comun.saveStatus = {};
+				  		}
+
+						console.log('antes de hide');return;
+				  		$mdDialog.hide();
+						
+					},1000);
+
+			  	}else{		
+					$scope.showInvalidToast();
+			  	}
+	  		}else{
+	  			if ($scope.userForm.$valid) {
+
+	  				comun.updateUser($scope.usuario);
+	  				$scope.hide();
+	  			}else {
+	  				$scope.showInvalidToast();
+	  			}
+	  		}
+		};
+	})
+
+	.controller('ctrlToast', function($scope, comun, $mdToast) {
+
+		$scope.toastClass = comun.toastClass;
+		$scope.saveStatus = comun.saveStatus;
+
+		// console.log(comun.saveStatus);
+		$scope.closeToast = function() {
+		    $mdToast.hide();
+		  };
+	})
+
+	.controller('ctrlListBottom', function($scope, comun, $mdBottomSheet, $mdToast, $document) {
+		
+		$scope.sendMail = function(){
+			console.log('send mail');
+			comun.sendMail();
+			$mdBottomSheet.hide();
+		}
+
+		$scope.excelExport = function(){
+			console.log('send mail');
+			comun.excelExport();
+			$mdBottomSheet.hide();
+
+
+		}
+		
 	})
 
 	.controller('ctrlConfirm', function($scope, comun, $mdBottomSheet, $mdSidenav, $mdDialog) {
@@ -565,6 +1046,8 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				comun.deleteProject(comun.confirm.item);
 			}else if(comun.confirm.model == 'Tarea'){
 				comun.delete(comun.confirm.item);
+			}else if(comun.confirm.model == 'Usuario'){
+				comun.deleteUser(comun.confirm.item);
 			}
 
 			comun.confirm = {};
@@ -618,5 +1101,11 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 	  return {
 	    replace: true,
 	    template: '<img style="width:70px; height:70px; margin-top:25px;" src="images/tareas/cancelada.png"></img>'
+	  };
+	})
+	.directive('userThumb', function() {
+	  return {
+	    replace: true,
+	    template: '<img style="width:70px; height:70px; margin-top:20px;margin-right:15px;" src="images/users/user.png"></img>'
 	  };
 	})
