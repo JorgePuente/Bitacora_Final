@@ -41,7 +41,7 @@ router.get('/logout', function(req, res) {
     console.log('logout');
 	// req.session.user = req.user;
 
-    // res.redirect('/');
+    res.redirect('/');
 });
 
 //GET - Metodo para listar todas las tareas
@@ -173,7 +173,53 @@ router.get('/tareas_fin_project/:id', function(req, res, next){
 		});
 });
 
-// *************************** FIN TAREAS PROPIAS ***********************
+// *************************** FIN TAREAS ASIGNADAS A UN PROYECTO ***********************
+
+// *************************** TAREAS Asignadas a un USUARIO ***********************
+
+//GET - Metodo para listar tareas pertenecientes a un usuario
+router.get('/tareas_user/:id', function(req, res, next){
+	Tareas.find({'users' : req.params.id})
+	.populate('projects')
+	.populate('users')
+	.exec(function(err, tareas){
+		if(err){return next(err)}
+		
+		res.json(tareas)
+	})
+});
+
+//GET - Metodo para listar tareas pendientes de un usuario
+router.get('/tareas_pend_user/:id', function(req, res, next){
+	// console.log('aqui estoy');
+	Tareas.find({'users' : req.params.id})
+		// .where('status').equals('PAUSA')
+		.or([{status : 'PAUSA'}, {status : 'PROCESO'}, {status : 'ESPERA'}])
+		.populate('users')
+		.populate('projects')
+		.exec(function(err, tareas){
+			if(err){return next(err)}
+
+			res.json(tareas)
+		});
+});
+
+//GET - Metodo para listar tareas finalizadas de un usuario
+router.get('/tareas_fin_user/:id', function(req, res, next){
+	// console.log('aqui estoy');
+	Tareas.find({'users' : req.params.id})
+		// .where('status').equals('PAUSA')
+		.or([{status : 'TERMINADA'}, {status : 'CANCELADA'}])
+		.populate('users')
+		.populate('projects')
+		.exec(function(err, tareas){
+			if(err){return next(err)}
+
+			res.json(tareas)
+		});
+});
+
+// *************************** FIN TAREAS ASIGNADAS A UN USUARIO ***********************
 
 //POST - Agregar Tareas
 router.post('/tarea', function(req, res, next){

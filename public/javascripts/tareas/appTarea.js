@@ -52,6 +52,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		comun.status = ['PAUSA', 'PROCESO', 'ESPERA', 'TERMINADA', 'CANCELADA'];
 		comun.usuariosAsignados = [];
 		comun.propias = false;
+		comun.us_as = false;
 		comun.saveStatus = {};
 		comun.successExcel = false;
 
@@ -127,6 +128,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 		// **************** fin propias ***************
 
+
 		comun.add = function(tarea){
 			return $http.post('/tarea', tarea)
 			.success(function(tarea){
@@ -154,6 +156,9 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				}else if(comun.projects){
 					comun.getAllFinProject();
 					comun.getAllPendProject();
+				}else if(comun.us_as){
+					comun.getAllFinUs();
+					comun.getAllPendUs();
 				}else{
 					comun.getAllFin();
 					comun.getAllPend();
@@ -173,6 +178,9 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 				}else if(comun.projects){
 					comun.getAllFinProject();
 					comun.getAllPendProject();
+				}else if(comun.us_as){
+					comun.getAllFinUs();
+					comun.getAllPendUs();
 				}else{
 					comun.getAllFin();
 					comun.getAllPend();
@@ -297,6 +305,40 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 			})
 		}
+		// **************** tareas por usuario *******************
+		comun.findUserAssignments = function(item){
+			return $http.get('/tareas_user/'+item._id) //http.get parsea el objeto de datos de la base de datos a un arreglo
+			.success(function(data){
+				angular.copy(data, comun.tareas);
+				// console.log(item);
+				comun.tareasTitulo = 'Tareas del usuario "' + item.username +'"';
+				comun.getAllPendUser(item._id);
+				comun.getAllFinUser(item._id);
+
+				return comun.tareas;
+			});
+		}
+
+		comun.getAllPendUser = function(project_id){
+			return $http.get('/tareas_pend_user/'+project_id) 
+			.success(function(data){
+				angular.copy(data, comun.tareas_pend);
+				
+				return comun.tareas_pend;
+			});
+		}
+
+		comun.getAllFinUser = function(project_id){
+			return $http.get('/tareas_fin_user/'+project_id) 
+			.success(function(data){
+				angular.copy(data, comun.tareas_fin);
+				
+				return comun.tareas_fin;
+			});
+		}
+		// **************** fin tareas por usuario *******************
+
+		
 
 		//********************** TAREAS PROPIAS DE UN PROYECTO ********************//
 
@@ -334,7 +376,8 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		//************************* FIN TATEAS PROPIAS DE UN PROYECTO**************************//
 
 		comun.logout = function(){
-			return $http.get('/logout')
+			console.log('entro');
+			$http.get('/logout')
 			.success(function(){
 				console.log('logout');
 				location.reload();
@@ -378,6 +421,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		$scope.openAssignments = function() {
 			comun.propias = false;
 			comun.projects = false;
+			comun.us_as = false;
 			comun.getAll();
 			comun.tareasTitulo = "Todas las tareas";
 
@@ -387,6 +431,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 		$scope.openMyAssignments = function() {
 			comun.propias = true;
+			comun.us_as = false;
 			comun.projects = false;
 			comun.getTareasPropias();
 			comun.tareasTitulo = "Tareas asignadas a mi";
@@ -435,6 +480,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 		$scope.projectAssignments = function(item){
 			comun.propias = false;
+			comun.us_as = false;
 			comun.projects = true;
 			comun.findProjectAssignments(item);
 			comun.tareasTitulo = 'Tareas del proyecto "'+ item.titulo +'"';
@@ -856,7 +902,7 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 		};	
 	})
 
-	.controller('ctrlUsuarios', function($scope, comun, $mdBottomSheet, $mdSidenav, $mdDialog) {
+	.controller('ctrlUsuarios', function($scope, $state, comun, $mdBottomSheet, $mdSidenav, $mdDialog) {
 
 		$scope.user = {};
 		comun.getAllUsuarios();
@@ -887,9 +933,10 @@ angular.module('appTareas', ['ui.router', 'ngMaterial', 'ngMdIcons'])
 
 		$scope.userAssignments = function(item){
 			comun.propias = false;
-			comun.projects = true;
-			comun.findProjectAssignments(item);
-			comun.tareasTitulo = 'Tareas del proyecto "'+ item.titulo +'"';
+			comun.projects = false;
+			comun.us_as = true;
+			comun.findUserAssignments(item);
+			comun.tareasTitulo = 'Tareas del usuario "'+ item.username +'"';
 			$state.go('tareas');
 		}
 
